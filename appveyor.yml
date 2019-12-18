@@ -1,4 +1,5 @@
 version: 0.1.{build}
+image: Visual Studio 2019
 dotnet_csproj:
   patch: true
   file: '**\*.csproj'
@@ -8,13 +9,11 @@ dotnet_csproj:
   assembly_version: '{version}'
   file_version: '{version}'
   informational_version: '{version}'
-build:
-  project: sources/Eshva.DockerCompose/Eshva.DockerCompose.csproj
-  publish_nuget: true
-  parallel: true
-  verbosity: minimal
+build_script:
+- pwsh: dotnet pack ./sources/Eshva.DockerCompose/Eshva.DockerCompose.csproj
 deploy:
 - provider: NuGet
   api_key:
     secure: RwdsEIjhYDeJvFbfTZayjLHBWtVTmvwBwfKIiGWG+K7edtQ94Hd5lOuN9yvhG7oF
-  skip_symbols: false
+  skip_symbols: true
+  artifact: /.*\.nupkg/
