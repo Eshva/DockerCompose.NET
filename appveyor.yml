@@ -1,0 +1,20 @@
+version: 0.1.{build}
+dotnet_csproj:
+  patch: true
+  file: '**\*.csproj'
+  version: '{version}'
+  version_prefix: '{version}'
+  package_version: '{version}'
+  assembly_version: '{version}'
+  file_version: '{version}'
+  informational_version: '{version}'
+build:
+  project: sources/Eshva.DockerCompose/Eshva.DockerCompose.csproj
+  publish_nuget: true
+  parallel: true
+  verbosity: minimal
+deploy:
+- provider: NuGet
+  api_key:
+    secure: RwdsEIjhYDeJvFbfTZayjLHBWtVTmvwBwfKIiGWG+K7edtQ94Hd5lOuN9yvhG7oF
+  skip_symbols: false
