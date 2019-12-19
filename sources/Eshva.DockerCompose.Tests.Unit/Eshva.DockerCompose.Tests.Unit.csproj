@@ -22,4 +22,19 @@
     <ProjectReference Include="..\Eshva.DockerCompose\Eshva.DockerCompose.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Commands\BuildServices\" />
+    <Folder Include="Commands\Common\" />
+    <Folder Include="Commands\DownProject\" />
+    <Folder Include="Commands\Execute\" />
+    <Folder Include="Commands\KillServices\" />
+    <Folder Include="Commands\Logs\" />
+    <Folder Include="Commands\RestartServices\" />
+    <Folder Include="Commands\Run\" />
+    <Folder Include="Commands\StartServices\" />
+    <Folder Include="Commands\StopServices\" />
+    <Folder Include="Commands\UpProject\" />
+    <Folder Include="ExecutableProcessStarter\" />
+  </ItemGroup>
+
 </Project>
