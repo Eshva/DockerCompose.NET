@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup>
+    <Description>.NET utilities for Docker Compose</Description>
+    <Authors>Mike Eshva</Authors>
+    <Company />
+    <LangVersion>latest</LangVersion>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <Product>DockerCompose.NET</Product>
+    <Copyright>Mike Eshva</Copyright>
+    <PackageProjectUrl>https://github.com/Eshva/DockerCompose.NET</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Eshva/DockerCompose.NET</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>docker, docker-compose</PackageTags>
+    <License>https://raw.githubusercontent.com/Eshva/DockerCompose.NET/master/LICENSE</License>
+  </PropertyGroup>
+</Project>

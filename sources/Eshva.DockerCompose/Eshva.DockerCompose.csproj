@@ -2,17 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>0.1.0</Version>
-    <Authors>Mike Eshva</Authors>
-    <Company />
-    <Product>DockerCompose.NET</Product>
-    <PackageLicenseExpression></PackageLicenseExpression>
-    <Copyright>Mike Eshva</Copyright>
-    <RepositoryUrl>https://github.com/Eshva/DockerCompose.NET</RepositoryUrl>
-    <RepositoryType>Git</RepositoryType>
-    <PackageTags>docker, docker-compose</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <AssemblyName>Eshva.DockerCompose</AssemblyName>
+    <PackageId>Eshva.DockerCompose</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,7 +15,6 @@
   <ItemGroup>
     <None Include="..\..\LICENSE">
       <Pack>True</Pack>
-      <PackagePath></PackagePath>
     </None>
   </ItemGroup>
 
