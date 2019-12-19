@@ -12,7 +12,7 @@ dotnet_csproj:
 build_script:
 - ps: |
     dotnet build ./sources/Eshva.DockerCompose.sln
-    dotnet pack ./sources/Eshva.DockerCompose/Eshva.DockerCompose.csproj
+    dotnet pack ./sources/Eshva.DockerCompose/Eshva.DockerCompose.csproj --output ./artifacts
 test:
   assemblies:
     - '**/*.Tests.Unit.dll'
@@ -21,4 +21,5 @@ deploy:
   api_key:
     secure: RwdsEIjhYDeJvFbfTZayjLHBWtVTmvwBwfKIiGWG+K7edtQ94Hd5lOuN9yvhG7oF
   skip_symbols: true
+  artifacts: './artifacts/*.nupkg'
   
