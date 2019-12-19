@@ -11,8 +11,11 @@ dotnet_csproj:
   informational_version: '{version}'
 build_script:
 - ps: |
-    dotnet build ./sources/Eshva.DockerCompose/Eshva.DockerCompose.csproj 
+    dotnet build ./sources/Eshva.DockerCompose.sln
     dotnet pack ./sources/Eshva.DockerCompose/Eshva.DockerCompose.csproj
+test:
+  assemblies:
+    - '**/*.Tests.Unit.dll'
 deploy:
 - provider: NuGet
   api_key:
