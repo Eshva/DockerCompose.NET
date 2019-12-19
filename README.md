@@ -1,2 +1,2 @@
-# Hodgepodge.NET
-.NET library for integration tests development with help of Docker Compose
+# DockerCompose.NET
+.NET utilities for Docker Compose
