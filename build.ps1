@@ -29,6 +29,10 @@ function CleanArtifacts($artifactsFolder) {
 
 function GetVersionSuffix {
   if ($env:APPVEYOR) {
+    if ($env:APPVEYOR_REPO_TAG -eq $true) {
+      return ""
+    }
+    
     return "beta-{0:0000}" -f [convert]::ToInt32("0" + $env:APPVEYOR_BUILD_NUMBER, 10)
   }
 
