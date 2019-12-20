@@ -11,6 +11,6 @@
     <RepositoryUrl>https://github.com/Eshva/DockerCompose.NET</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>docker, docker-compose</PackageTags>
-    <License>https://raw.githubusercontent.com/Eshva/DockerCompose.NET/master/LICENSE</License>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 </Project>
