@@ -10,33 +10,73 @@
   exec { svn info $repository_trunk } "Error executing SVN. Please verify SVN command-line client is installed"
 #>
 function Exec {
-    [CmdletBinding()]
-    param(
-        [Parameter(Position = 0, Mandatory = 1)][scriptblock]$cmd,
-        [Parameter(Position = 1, Mandatory = 0)][string]$errorMessage = ($msgs.error_bad_command -f $cmd)
-    )
-    & $cmd
-    if ($lastexitcode -ne 0) {
-        throw ("Exec: " + $errorMessage)
-    }
+  [CmdletBinding()]
+  param(
+    [Parameter(Position = 0, Mandatory = 1)][scriptblock]$cmd,
+    [Parameter(Position = 1, Mandatory = 0)][string]$errorMessage = ($msgs.error_bad_command -f $cmd)
+  )
+  & $cmd
+  if ($lastexitcode -ne 0) {
+    throw ("Exec: " + $errorMessage)
+  }
 }
 
-if (Test-Path .\artifacts) { Remove-Item .\artifacts -Force -Recurse }
+function CleanArtifacts($artifactsFolder) {
+  if (Test-Path $artifactsFolder) { 
+    Remove-Item $artifactsFolder -Force -Recurse 
+  }  
+}
 
-$branch = @{ $true = $env:APPVEYOR_REPO_BRANCH; $false = $(git symbolic-ref --short -q HEAD) }[$NULL -ne $env:APPVEYOR_REPO_BRANCH];
-$suffix = @{ $true = "{0:00000}" -f [convert]::ToInt32("0" + $env:APPVEYOR_BUILD_NUMBER, 10); $false = "local" }[$NULL -ne $env:APPVEYOR_BUILD_NUMBER];
-#$revision = @{ $true = "{0:00000}" -f [convert]::ToInt32("0" + $env:APPVEYOR_BUILD_NUMBER, 10); $false = "local" }[$NULL -ne $env:APPVEYOR_BUILD_NUMBER];
-#$suffix = @{ $true = ""; $false = "$($branch.Substring(0, [math]::Min(10,$branch.Length)))-$revision" }[$branch -eq "master" -and $revision -ne "local"]
-$commitHash = $(git rev-parse --short HEAD)
-$buildSuffix = @{ $true = "$($suffix)-$($commitHash)"; $false = "$($branch)-$($commitHash)" }[$suffix -ne ""]
-$versionSuffix = @{ $true = "--version-suffix=$($suffix)"; $false = "" }[$suffix -ne ""]
+function GetVersionSuffix {
+  if ($env:APPVEYOR) {
+    return "{0:0000}" -f [convert]::ToInt32("0" + $env:APPVEYOR_BUILD_NUMBER, 10)
+  }
+
+  $commitHash = $(git rev-parse --short HEAD)
+  return "local-$commitHash"
+}
+
+function PrintBuildInformation($versionSuffix) {
+  $buildKind = ""
+  if ($env:APPVEYOR) {
+    if ($env:APPVEYOR_PULL_REQUEST_NUMBER -ne "") {
+      $buildKind = "It is AppVeyor CI build for $env:APPVEYOR_PULL_REQUEST_NUMBER PR into $env:APPVEYOR_REPO_BRANCH branch."
+    }
+    elseif ($env:APPVEYOR_REPO_TAG -eq $true) {
+      $buildKind = "It is AppVeyor CI build for tag $env:APPVEYOR_REPO_TAG_NAME in $env:APPVEYOR_REPO_BRANCH branch."
+    }
+    else {
+      $buildKind = "It is AppVeyor CI build for $env:APPVEYOR_REPO_BRANCH branch."
+    }
+  }
+  else {
+    $buildKind = "It is a local build."
+  }
+
+  Write-Host "BUILD: $buildKind"
+  Write-Output "BUILD: Package version suffix is $versionSuffix"
+}
+
+function Build($solutionFile, $versionSuffix) {
+  exec { & dotnet build $solutionFile --configuration Release --version-suffix $versionSuffix }
+}
+
+function Test($solutionFile) {
+  exec { & dotnet test $solutionFile --configuration Release --no-build --no-restore }
+}
+
+function MakePackage($packageProject, $artifactsFolder, $versionSuffix) {
+  exec { & dotnet pack $packageProject --configuration Release --output $artifactsFolder --include-symbols --no-build --version-suffix $versionSuffix }
+}
+
 
 $solutionFile = ".\sources\Eshva.DockerCompose.sln"
 $packageProject = ".\sources\Eshva.DockerCompose\Eshva.DockerCompose.csproj"
+$artifactsFolder = ".\artifacts"
+$versionSuffix = GetVersionSuffix
 
-Write-Output "build: Package version suffix is $suffix"
-Write-Output "build: Build version suffix is $buildSuffix" 
-
-exec { & dotnet build $solutionFile --configuration Release --version-suffix=$buildSuffix }
-exec { & dotnet test $solutionFile --configuration Release --no-build --no-restore }
-exec { & dotnet pack $packageProject --configuration Release --output .\artifacts --include-symbols --no-build $versionSuffix }
+PrintBuildInformation $versionSuffix
+CleanArtifacts $artifactsFolder
+Build $solutionFile $versionSuffix
+Test $solutionFile
+MakePackage $packageProject $artifactsFolder $versionSuffix
