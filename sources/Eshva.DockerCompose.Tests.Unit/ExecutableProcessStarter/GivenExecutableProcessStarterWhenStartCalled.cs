@@ -25,7 +25,7 @@ namespace Eshva.DockerCompose.Tests.Unit.ExecutableProcessStarter
         public void ShouldBreakExecutionAfterSpecifiedAmountOfTime()
         {
             var starter = new Infrastructure.ExecutableProcessStarter("arp");
-            Func<Task> execute = async () => await starter.Start(string.Empty, TimeSpan.FromMilliseconds(1));
+            Func<Task> execute = async () => await starter.Start("-a -v", TimeSpan.FromMilliseconds(1));
             execute.Should().ThrowExactly<TimeoutException>();
         }
 
