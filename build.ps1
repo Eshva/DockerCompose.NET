@@ -32,7 +32,7 @@ function GetVersionSuffix {
     if ($env:APPVEYOR_REPO_TAG -eq $true) {
       return ""
     }
-    
+
     return "beta-{0:0000}" -f [convert]::ToInt32("0" + $env:APPVEYOR_BUILD_NUMBER, 10)
   }
 
@@ -62,16 +62,17 @@ function PrintBuildInformation($versionSuffix) {
   Write-Output "BUILD: Package version suffix is $versionSuffix"
 }
 
-function Build($solutionFile, $versionSuffix) {
-  exec { & dotnet build $solutionFile --configuration Release --version-suffix $versionSuffix }
+function Build($solutionFile, $versionSuffixOption) {
+  #dotnet build $solutionFile --configuration Release $versionSuffixOption
+  exec { & dotnet build $solutionFile --configuration Release $versionSuffixOption }
 }
 
 function Test($solutionFile) {
   exec { & dotnet test $solutionFile --configuration Release --no-build --no-restore }
 }
 
-function MakePackage($packageProject, $artifactsFolder, $versionSuffix) {
-  exec { & dotnet pack $packageProject --configuration Release --output $artifactsFolder --include-symbols --no-build --version-suffix $versionSuffix }
+function MakePackage($packageProject, $artifactsFolder, $versionSuffixOption) {
+  exec { & dotnet pack $packageProject --configuration Release --output $artifactsFolder --include-symbols --no-build $versionSuffixOption }
 }
 
 
@@ -80,9 +81,11 @@ $packageProject = ".\sources\Eshva.DockerCompose\Eshva.DockerCompose.csproj"
 $artifactsFolder = ".\artifacts"
 
 $versionSuffix = GetVersionSuffix
-
+$versionSuffixOption = @{ $true = "--version-suffix=$versionSuffix"; $false = "" }[$versionSuffix -ne ""];
+echo $versionSuffixOption
+  
 PrintBuildInformation $versionSuffix
 CleanArtifacts $artifactsFolder
-Build $solutionFile $versionSuffix
+Build $solutionFile $versionSuffixOption
 Test $solutionFile
-MakePackage $packageProject $artifactsFolder $versionSuffix
+MakePackage $packageProject $artifactsFolder $versionSuffixOption
