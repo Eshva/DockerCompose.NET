@@ -59,7 +59,12 @@ function GetBuildKind() {
 function PrintBuildInformation($versionSuffix) {
   $buildKind = GetBuildKind
   Write-Host "BUILD: It is $buildKind"
-  Write-Output "BUILD: Package version suffix is $versionSuffix"
+  if ($versionSuffix -ne "") {
+    Write-Output "BUILD: Package version suffix is $versionSuffix"
+  }
+  else {
+    Write-Host "BUILD: No package version suffix."
+  }
 }
 
 function Build($solutionFile, $versionSuffixOption) {
