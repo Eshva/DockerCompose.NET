@@ -29,31 +29,32 @@ function CleanArtifacts($artifactsFolder) {
 
 function GetVersionSuffix {
   if ($env:APPVEYOR) {
-    return "{0:0000}" -f [convert]::ToInt32("0" + $env:APPVEYOR_BUILD_NUMBER, 10)
+    return "beta-{0:0000}" -f [convert]::ToInt32("0" + $env:APPVEYOR_BUILD_NUMBER, 10)
   }
 
   $commitHash = $(git rev-parse --short HEAD)
   return "local-$commitHash"
 }
 
-function PrintBuildInformation($versionSuffix) {
-  $buildKind = ""
+function GetBuildKind() {
   if ($env:APPVEYOR) {
     if ($env:APPVEYOR_PULL_REQUEST_NUMBER -ne "") {
-      $buildKind = "It is AppVeyor CI build for $env:APPVEYOR_PULL_REQUEST_NUMBER PR into $env:APPVEYOR_REPO_BRANCH branch."
+      return "an AppVeyor CI build for PR #$env:APPVEYOR_PULL_REQUEST_NUMBER into $env:APPVEYOR_REPO_BRANCH branch."
     }
     elseif ($env:APPVEYOR_REPO_TAG -eq $true) {
-      $buildKind = "It is AppVeyor CI build for tag $env:APPVEYOR_REPO_TAG_NAME in $env:APPVEYOR_REPO_BRANCH branch."
+      return "an AppVeyor CI build for tag $env:APPVEYOR_REPO_TAG_NAME in $env:APPVEYOR_REPO_BRANCH branch."
     }
     else {
-      $buildKind = "It is AppVeyor CI build for $env:APPVEYOR_REPO_BRANCH branch."
+      return "an AppVeyor CI build for $env:APPVEYOR_REPO_BRANCH branch."
     }
   }
-  else {
-    $buildKind = "It is a local build."
-  }
+  
+  return "a local build."
+}
 
-  Write-Host "BUILD: $buildKind"
+function PrintBuildInformation($versionSuffix) {
+  $buildKind = GetBuildKind
+  Write-Host "BUILD: It is $buildKind"
   Write-Output "BUILD: Package version suffix is $versionSuffix"
 }
 
@@ -73,6 +74,7 @@ function MakePackage($packageProject, $artifactsFolder, $versionSuffix) {
 $solutionFile = ".\sources\Eshva.DockerCompose.sln"
 $packageProject = ".\sources\Eshva.DockerCompose\Eshva.DockerCompose.csproj"
 $artifactsFolder = ".\artifacts"
+
 $versionSuffix = GetVersionSuffix
 
 PrintBuildInformation $versionSuffix
