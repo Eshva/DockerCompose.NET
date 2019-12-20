@@ -42,7 +42,7 @@ function GetVersionSuffix {
 
 function GetBuildKind() {
   if ($env:APPVEYOR) {
-    if ($env:APPVEYOR_PULL_REQUEST_NUMBER -ne "") {
+    if ($null -ne $env:APPVEYOR_PULL_REQUEST_NUMBER) {
       return "an AppVeyor CI build for PR #$env:APPVEYOR_PULL_REQUEST_NUMBER into $env:APPVEYOR_REPO_BRANCH branch."
     }
     elseif ($env:APPVEYOR_REPO_TAG -eq $true) {
