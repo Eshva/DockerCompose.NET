@@ -63,7 +63,6 @@ function PrintBuildInformation($versionSuffix) {
 }
 
 function Build($solutionFile, $versionSuffixOption) {
-  #dotnet build $solutionFile --configuration Release $versionSuffixOption
   exec { & dotnet build $solutionFile --configuration Release $versionSuffixOption }
 }
 
@@ -82,7 +81,6 @@ $artifactsFolder = ".\artifacts"
 
 $versionSuffix = GetVersionSuffix
 $versionSuffixOption = @{ $true = "--version-suffix=$versionSuffix"; $false = "" }[$versionSuffix -ne ""];
-echo $versionSuffixOption
   
 PrintBuildInformation $versionSuffix
 CleanArtifacts $artifactsFolder
