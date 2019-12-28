@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Eshva.DockerCompose.Commands;
@@ -75,6 +76,38 @@ namespace Eshva.DockerCompose.Tests.Unit.Commands.Common
             starterMock.Verify(
                 starter => starter.Start(It.Is(argumentsValidator), TimeSpan.FromHours(1)),
                 Times.Once());
+        }
+
+        [Fact]
+        public void ShouldThrowIfCommandExecutionExceededTimeout()
+        {
+            var starterMock = new Mock<IProcessStarter>();
+            starterMock.Setup(starter => starter.Start(It.IsAny<string>(), It.IsAny<TimeSpan>()))
+                       .Throws<TimeoutException>();
+            starterMock.Setup(starter => starter.StandardError).Returns(() => TextReader.Null);
+            starterMock.Setup(starter => starter.StandardOutput).Returns(() => TextReader.Null);
+            var command = new VersionCommand(starterMock.Object, string.Empty);
+            Func<Task> execute = async () => await command.Execute();
+            execute.Should()
+                   .ThrowExactly<CommandExecutionException>()
+                   .WithMessage("*timeout*")
+                   .WithInnerExceptionExactly<TimeoutException>();
+        }
+
+        [Fact]
+        public void ShouldThrowIfCommandNotStarted()
+        {
+            var starterMock = new Mock<IProcessStarter>();
+            starterMock.Setup(starter => starter.Start(It.IsAny<string>(), It.IsAny<TimeSpan>()))
+                       .Throws<InvalidOperationException>();
+            starterMock.Setup(starter => starter.StandardError).Returns(() => TextReader.Null);
+            starterMock.Setup(starter => starter.StandardOutput).Returns(() => TextReader.Null);
+            var command = new VersionCommand(starterMock.Object, string.Empty);
+            Func<Task> execute = async () => await command.Execute();
+            execute.Should()
+                   .ThrowExactly<CommandExecutionException>()
+                   .WithMessage("*not started*")
+                   .WithInnerExceptionExactly<InvalidOperationException>();
         }
 
         private sealed class BadCommand : CommandBase

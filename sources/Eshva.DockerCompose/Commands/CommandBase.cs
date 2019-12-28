@@ -54,16 +54,34 @@ namespace Eshva.DockerCompose.Commands
             var projectFileNames = _files.Aggregate(string.Empty, (result, current) => $"{result} -f \"{current}\"");
             var arguments = string.Join(" ", PrepareArguments());
 
-            var exitCode = await _starter.Start(
-                $"{projectFileNames.Trim()} {Command.Trim()} {arguments.Trim()}".Trim(),
-                executionTimeout);
+            var exitCode = -1;
+            try
+            {
+                exitCode = await _starter.Start(
+                    $"{projectFileNames.Trim()} {Command.Trim()} {arguments.Trim()}".Trim(),
+                    executionTimeout);
+            }
+            catch (TimeoutException exception)
+            {
+                throw new CommandExecutionException(
+                    $"Docker Compose command {GetType().Name} execution exceeded timeout {executionTimeout:g}.{Environment.NewLine}" +
+                    FormatOutputForException(),
+                    exception);
+            }
+            catch (InvalidOperationException exception)
+            {
+                throw new CommandExecutionException(
+                    $"Docker Compose command {GetType().Name} not started.{Environment.NewLine}" +
+                    FormatOutputForException(),
+                    exception);
+            }
+
             if (exitCode != 0)
             {
                 throw new CommandExecutionException(
-                    $"Docker Compose command {GetType().Name} executed with an error. " +
-                    $"Exit code was {exitCode}.{Environment.NewLine}{Environment.NewLine}" +
-                    $"Command STDOUT:{Environment.NewLine}{_starter.StandardOutput.ReadToEnd()}{Environment.NewLine}" +
-                    $"Command STDERR:{Environment.NewLine}{_starter.StandardError.ReadToEnd()}{Environment.NewLine}");
+                    $"Docker Compose command {GetType().Name} executed with an error. {Environment.NewLine}" +
+                    $"Exit code was {exitCode}.{Environment.NewLine}" +
+                    FormatOutputForException());
             }
         }
 
@@ -87,6 +105,10 @@ namespace Eshva.DockerCompose.Commands
         /// Array of Docker Compose arguments.
         /// </returns>
         protected abstract string[] PrepareArguments();
+
+        private string FormatOutputForException() =>
+            $"{Environment.NewLine}Command STDOUT:{Environment.NewLine}{_starter.StandardOutput.ReadToEnd()}{Environment.NewLine}" +
+            $"Command STDERR:{Environment.NewLine}{_starter.StandardError.ReadToEnd()}{Environment.NewLine}";
 
         private const string DockerComposeExecutable = "docker-compose";
         private readonly string[] _files;
