@@ -1,3 +1,10 @@
+#region Usings
+
+using System;
+
+#endregion
+
+
 namespace Eshva.DockerCompose.Exceptions
 {
     /// <summary>
@@ -7,6 +14,11 @@ namespace Eshva.DockerCompose.Exceptions
     {
         /// <inheritdoc cref="DockerComposeException"/>
         public CommandExecutionException(string message) : base(message)
+        {
+        }
+
+        /// <inheritdoc cref="DockerComposeException"/>
+        public CommandExecutionException(string message, Exception exception) : base(message, exception)
         {
         }
     }
