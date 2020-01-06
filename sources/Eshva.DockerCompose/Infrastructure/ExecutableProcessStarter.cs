@@ -31,17 +31,17 @@ namespace Eshva.DockerCompose.Infrastructure
         }
 
         /// <inheritdoc cref="IProcessStarter.StandardOutput"/>
-        public TextReader StandardOutput { get; private set; } = new StringReader(string.Empty);
+        public StringBuilder StandardOutput { get; } = new StringBuilder();
 
         /// <inheritdoc cref="IProcessStarter.StandardError"/>
-        public TextReader StandardError { get; private set; } = new StringReader(string.Empty);
+        public StringBuilder StandardError { get; } = new StringBuilder();
 
         /// <inheritdoc cref="IProcessStarter.Start"/>
         [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
         public async Task<int> Start(string arguments, TimeSpan executionTimeout)
         {
-            var outputTextWriter = new StringWriter(_outputBuilder);
-            var errorTextWriter = new StringWriter(_errorBuilder);
+            var outputTextWriter = new StringWriter(StandardOutput);
+            var errorTextWriter = new StringWriter(StandardError);
 
             var processStartInfo = new ProcessStartInfo(_executable, arguments)
                                    {
@@ -70,7 +70,7 @@ namespace Eshva.DockerCompose.Infrastructure
                 var timeoutTokenSource = new CancellationTokenSource(executionTimeout);
                 await Task.WhenAll(
                     process.WaitForExitAsync(timeoutTokenSource.Token),
-                    ProcessExtensions.ReadAsync(
+                    ReadAsync(
                         handler =>
                         {
                             process.OutputDataReceived += handler;
@@ -79,7 +79,7 @@ namespace Eshva.DockerCompose.Infrastructure
                         handler => process.OutputDataReceived -= handler,
                         outputTextWriter,
                         timeoutTokenSource.Token),
-                    ProcessExtensions.ReadAsync(
+                    ReadAsync(
                         handler =>
                         {
                             process.ErrorDataReceived += handler;
@@ -98,15 +98,46 @@ namespace Eshva.DockerCompose.Infrastructure
             }
             finally
             {
-                StandardOutput = new StringReader(_outputBuilder.ToString());
-                StandardError = new StringReader(_errorBuilder.ToString());
                 process.Dispose();
             }
         }
 
-        private readonly StringBuilder _errorBuilder = new StringBuilder();
+        private static Task ReadAsync(
+            Action<DataReceivedEventHandler> addHandler,
+            Action<DataReceivedEventHandler> removeHandler,
+            TextWriter textWriter,
+            CancellationToken cancellationToken = default)
+        {
+            var taskCompletionSource = new TaskCompletionSource<object>();
+
+            addHandler(Handler);
+
+            if (cancellationToken != default)
+            {
+                cancellationToken.Register(
+                    () =>
+                    {
+                        removeHandler(Handler);
+                        taskCompletionSource.TrySetCanceled();
+                    });
+            }
+
+            return taskCompletionSource.Task;
+
+            void Handler(object sender, DataReceivedEventArgs eventArgs)
+            {
+                if (eventArgs.Data == null)
+                {
+                    removeHandler(Handler);
+                    taskCompletionSource.TrySetResult(null);
+                }
+                else
+                {
+                    textWriter.WriteLine(eventArgs.Data);
+                }
+            }
+        }
 
         private readonly string _executable;
-        private readonly StringBuilder _outputBuilder = new StringBuilder();
     }
 }

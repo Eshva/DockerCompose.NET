@@ -56,7 +56,7 @@ namespace Eshva.DockerCompose.Commands
         /// Execution timeout.
         /// </param>
         /// <returns>
-        /// Task.
+        /// A task representing the asynchronous operation.
         /// </returns>
         /// <exception cref="CommandExecutionException">
         /// An error occured during command execution.
@@ -66,7 +66,7 @@ namespace Eshva.DockerCompose.Commands
             var projectFileNames = _files.Aggregate(string.Empty, (result, current) => $"{result} -f \"{current}\"");
             var arguments = string.Join(" ", PrepareArguments());
 
-            var exitCode = -1;
+            int exitCode;
             try
             {
                 exitCode = await _starter.Start(
@@ -119,8 +119,8 @@ namespace Eshva.DockerCompose.Commands
         protected abstract string[] PrepareArguments();
 
         private string FormatOutputForException() =>
-            $"{Environment.NewLine}Command STDOUT:{Environment.NewLine}{_starter.StandardOutput.ReadToEnd()}{Environment.NewLine}" +
-            $"Command STDERR:{Environment.NewLine}{_starter.StandardError.ReadToEnd()}{Environment.NewLine}";
+            $"{Environment.NewLine}Command STDOUT:{Environment.NewLine}{_starter.StandardOutput}{Environment.NewLine}" +
+            $"Command STDERR:{Environment.NewLine}{_starter.StandardError}{Environment.NewLine}";
 
         private const string DockerComposeExecutable = "docker-compose";
         private readonly string[] _files;
