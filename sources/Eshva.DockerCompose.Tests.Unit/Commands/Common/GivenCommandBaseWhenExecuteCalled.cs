@@ -2,8 +2,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq.Expressions;
+using System.Text;
 using System.Threading.Tasks;
 using Eshva.DockerCompose.Commands;
 using Eshva.DockerCompose.Exceptions;
@@ -84,8 +84,8 @@ namespace Eshva.DockerCompose.Tests.Unit.Commands.Common
             var starterMock = new Mock<IProcessStarter>();
             starterMock.Setup(starter => starter.Start(It.IsAny<string>(), It.IsAny<TimeSpan>()))
                        .Throws<TimeoutException>();
-            starterMock.Setup(starter => starter.StandardError).Returns(() => TextReader.Null);
-            starterMock.Setup(starter => starter.StandardOutput).Returns(() => TextReader.Null);
+            starterMock.Setup(starter => starter.StandardError).Returns(() => new StringBuilder());
+            starterMock.Setup(starter => starter.StandardOutput).Returns(() => new StringBuilder());
             var command = new VersionCommand(starterMock.Object, string.Empty);
             Func<Task> execute = async () => await command.Execute();
             execute.Should()
@@ -100,8 +100,8 @@ namespace Eshva.DockerCompose.Tests.Unit.Commands.Common
             var starterMock = new Mock<IProcessStarter>();
             starterMock.Setup(starter => starter.Start(It.IsAny<string>(), It.IsAny<TimeSpan>()))
                        .Throws<InvalidOperationException>();
-            starterMock.Setup(starter => starter.StandardError).Returns(() => TextReader.Null);
-            starterMock.Setup(starter => starter.StandardOutput).Returns(() => TextReader.Null);
+            starterMock.Setup(starter => starter.StandardError).Returns(() => new StringBuilder());
+            starterMock.Setup(starter => starter.StandardOutput).Returns(() => new StringBuilder());
             var command = new VersionCommand(starterMock.Object, string.Empty);
             Func<Task> execute = async () => await command.Execute();
             execute.Should()

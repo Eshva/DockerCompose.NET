@@ -34,7 +34,7 @@ namespace Eshva.DockerCompose.Tests.Unit.ExecutableProcessStarter
         {
             var starter = new Infrastructure.ExecutableProcessStarter("arp");
             await starter.Start("-a", TimeSpan.FromDays(1));
-            starter.StandardOutput.ReadToEnd().Length.Should().BeGreaterThan(0);
+            starter.StandardOutput.Length.Should().BeGreaterThan(0);
         }
 
         [Fact]
@@ -42,7 +42,7 @@ namespace Eshva.DockerCompose.Tests.Unit.ExecutableProcessStarter
         {
             var starter = new Infrastructure.ExecutableProcessStarter("arp");
             await starter.Start("-s sdsfsddsf adsdsfsdf", TimeSpan.FromDays(1));
-            starter.StandardError.ReadToEnd().Length.Should().BeGreaterThan(0);
+            starter.StandardError.Length.Should().BeGreaterThan(0);
         }
     }
 }
