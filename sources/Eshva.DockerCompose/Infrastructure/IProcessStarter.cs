@@ -2,6 +2,7 @@
 
 using System;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using Eshva.DockerCompose.Exceptions;
 
@@ -18,12 +19,12 @@ namespace Eshva.DockerCompose.Infrastructure
         /// <summary>
         /// Gets standard output stream of the started process.
         /// </summary>
-        TextReader StandardOutput { get; }
+        StringBuilder StandardOutput { get; }
 
         /// <summary>
         /// Gets standard error stream  of the started process.
         /// </summary>
-        TextReader StandardError { get; }
+        StringBuilder StandardError { get; }
 
         /// <summary>
         /// Starts the process chronologically with <paramref name="arguments"/>.

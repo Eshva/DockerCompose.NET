@@ -4,7 +4,7 @@
     <Authors>Mike Eshva</Authors>
     <Company />
     <LangVersion>latest</LangVersion>
-    <VersionPrefix>0.1.5</VersionPrefix>
+    <VersionPrefix>0.1.6</VersionPrefix>
     <Product>DockerCompose.NET</Product>
     <Copyright>Mike Eshva</Copyright>
     <PackageProjectUrl>https://github.com/Eshva/DockerCompose.NET</PackageProjectUrl>

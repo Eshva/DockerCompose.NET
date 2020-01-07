@@ -2,7 +2,10 @@
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Eshva.DockerCompose.Exceptions;
 
@@ -28,19 +31,23 @@ namespace Eshva.DockerCompose.Infrastructure
         }
 
         /// <inheritdoc cref="IProcessStarter.StandardOutput"/>
-        public TextReader StandardOutput { get; private set; } = new StringReader(string.Empty);
+        public StringBuilder StandardOutput { get; } = new StringBuilder();
 
         /// <inheritdoc cref="IProcessStarter.StandardError"/>
-        public TextReader StandardError { get; private set; } = new StringReader(string.Empty);
+        public StringBuilder StandardError { get; } = new StringBuilder();
 
         /// <inheritdoc cref="IProcessStarter.Start"/>
-        public Task<int> Start(string arguments, TimeSpan executionTimeout)
+        [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
+        public async Task<int> Start(string arguments, TimeSpan executionTimeout)
         {
+            var outputTextWriter = new StringWriter(StandardOutput);
+            var errorTextWriter = new StringWriter(StandardError);
+
             var processStartInfo = new ProcessStartInfo(_executable, arguments)
                                    {
                                        RedirectStandardOutput = true,
                                        RedirectStandardError = true,
-                                       CreateNoWindow = false,
+                                       CreateNoWindow = true,
                                        UseShellExecute = false
                                    };
             Process process;
@@ -60,19 +67,74 @@ namespace Eshva.DockerCompose.Infrastructure
 
             try
             {
-                var wasExitedNormally = process.WaitForExit((int)executionTimeout.TotalMilliseconds);
-                if (!wasExitedNormally)
-                {
-                    throw new TimeoutException();
-                }
+                var timeoutTokenSource = new CancellationTokenSource(executionTimeout);
+                await Task.WhenAll(
+                    process.WaitForExitAsync(timeoutTokenSource.Token),
+                    ReadAsync(
+                        handler =>
+                        {
+                            process.OutputDataReceived += handler;
+                            process.BeginOutputReadLine();
+                        },
+                        handler => process.OutputDataReceived -= handler,
+                        outputTextWriter,
+                        timeoutTokenSource.Token),
+                    ReadAsync(
+                        handler =>
+                        {
+                            process.ErrorDataReceived += handler;
+                            process.BeginErrorReadLine();
+                        },
+                        handler => process.ErrorDataReceived -= handler,
+                        errorTextWriter,
+                        timeoutTokenSource.Token)
+                );
 
-                return Task.FromResult(process.ExitCode);
+                return process.ExitCode;
+            }
+            catch (TaskCanceledException exception)
+            {
+                throw new TimeoutException($"The process is not finished during {executionTimeout:g}", exception);
             }
             finally
             {
-                StandardOutput = process.StandardOutput;
-                StandardError = process.StandardError;
                 process.Dispose();
+            }
+        }
+
+        private static Task ReadAsync(
+            Action<DataReceivedEventHandler> addHandler,
+            Action<DataReceivedEventHandler> removeHandler,
+            TextWriter textWriter,
+            CancellationToken cancellationToken = default)
+        {
+            var taskCompletionSource = new TaskCompletionSource<object>();
+
+            addHandler(Handler);
+
+            if (cancellationToken != default)
+            {
+                cancellationToken.Register(
+                    () =>
+                    {
+                        removeHandler(Handler);
+                        taskCompletionSource.TrySetCanceled();
+                    });
+            }
+
+            return taskCompletionSource.Task;
+
+            void Handler(object sender, DataReceivedEventArgs eventArgs)
+            {
+                if (eventArgs.Data == null)
+                {
+                    removeHandler(Handler);
+                    taskCompletionSource.TrySetResult(null);
+                }
+                else
+                {
+                    textWriter.WriteLine(eventArgs.Data);
+                }
             }
         }
 
