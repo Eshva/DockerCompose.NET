@@ -84,14 +84,46 @@ namespace Eshva.DockerCompose.Tests.Unit.Commands.Common
             var starterMock = new Mock<IProcessStarter>();
             starterMock.Setup(starter => starter.Start(It.IsAny<string>(), It.IsAny<TimeSpan>()))
                        .Throws<TimeoutException>();
-            starterMock.Setup(starter => starter.StandardError).Returns(() => new StringBuilder());
             starterMock.Setup(starter => starter.StandardOutput).Returns(() => new StringBuilder());
+            starterMock.Setup(starter => starter.StandardError).Returns(() => new StringBuilder());
             var command = new VersionCommand(starterMock.Object, string.Empty);
             Func<Task> execute = async () => await command.Execute();
             execute.Should()
                    .ThrowExactly<CommandExecutionException>()
                    .WithMessage("*timeout*")
                    .WithInnerExceptionExactly<TimeoutException>();
+        }
+
+        [Fact]
+        public void ShouldCopyStandardOutputAndStandardErrorFromProcessStarterOnFailedExecution()
+        {
+            var starterMock = new Mock<IProcessStarter>();
+            starterMock.Setup(starter => starter.Start(It.IsAny<string>(), It.IsAny<TimeSpan>()))
+                       .Throws<TimeoutException>();
+            starterMock.Setup(starter => starter.StandardOutput).Returns(() => new StringBuilder("stdout"));
+            starterMock.Setup(starter => starter.StandardError).Returns(() => new StringBuilder("stderr"));
+            var command = new VersionCommand(starterMock.Object, string.Empty);
+            Func<Task> execute = async () => await command.Execute();
+
+            execute.Should().ThrowExactly<CommandExecutionException>();
+            command.StandardOutput.ToString().Should().Be("stdout");
+            command.StandardError.ToString().Should().Be("stderr");
+        }
+
+        [Fact]
+        public void ShouldCopyStandardOutputAndStandardErrorFromProcessStarterOnSuccessfulExecution()
+        {
+            var starterMock = new Mock<IProcessStarter>();
+            starterMock.Setup(starter => starter.Start(It.IsAny<string>(), It.IsAny<TimeSpan>()))
+                       .Returns(Task.FromResult(0));
+            starterMock.Setup(starter => starter.StandardOutput).Returns(() => new StringBuilder("stdout"));
+            starterMock.Setup(starter => starter.StandardError).Returns(() => new StringBuilder("stderr"));
+            var command = new VersionCommand(starterMock.Object, string.Empty);
+            Func<Task> execute = async () => await command.Execute();
+
+            execute.Should().NotThrow();
+            command.StandardOutput.ToString().Should().Be("stdout");
+            command.StandardError.ToString().Should().Be("stderr");
         }
 
         [Fact]
