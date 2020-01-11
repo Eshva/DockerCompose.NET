@@ -2,6 +2,7 @@
 
 using System;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Eshva.DockerCompose.Exceptions;
 using Eshva.DockerCompose.Infrastructure;
@@ -45,6 +46,16 @@ namespace Eshva.DockerCompose.Commands
         }
 
         /// <summary>
+        /// Gets standard output from command execution.
+        /// </summary>
+        public StringBuilder StandardOutput { get; private set; } = new StringBuilder();
+
+        /// <summary>
+        /// Gets standard error from command execution.
+        /// </summary>
+        public StringBuilder StandardError { get; private set; } = new StringBuilder();
+
+        /// <summary>
         /// Executes the command asynchronously.
         /// </summary>
         public Task Execute() => Execute(_oneDayLong);
@@ -86,6 +97,11 @@ namespace Eshva.DockerCompose.Commands
                     $"Docker Compose command {GetType().Name} not started.{Environment.NewLine}" +
                     FormatOutputForException(),
                     exception);
+            }
+            finally
+            {
+                StandardOutput = _starter.StandardOutput;
+                StandardError = _starter.StandardError;
             }
 
             if (exitCode != 0)
